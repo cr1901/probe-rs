@@ -6,6 +6,7 @@ pub(crate) mod usb_util;
 pub mod blackmagic;
 pub mod cmsisdap;
 pub mod espusbjtag;
+pub mod ez430;
 pub mod fake_probe;
 pub mod ftdi;
 pub mod jlink;
