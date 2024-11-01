@@ -9,9 +9,14 @@ use crate::{
 };
 
 mod tools;
-mod usb_interface;
+mod hid;
 
-use usb_interface::Ez430UsbDevice;
+use hid::Ez430UsbDevice;
+
+
+pub enum Cmd {
+    Init = 1,
+}
 
 /// A factory for creating [`Ez430`] probes.
 #[derive(Debug)]
@@ -27,6 +32,7 @@ impl ProbeFactory for Ez430Factory {
     fn open(&self, selector: &DebugProbeSelector) -> Result<Box<dyn DebugProbe>, DebugProbeError> {
         let device = Ez430UsbDevice::new_from_selector(selector)?;
         let mut Ez430 = Ez430 {
+            device
         };
 
         Ez430.init()?;
@@ -43,8 +49,10 @@ impl ProbeFactory for Ez430Factory {
 /// ST-Link specific errors.
 #[derive(thiserror::Error, Debug, docsplay::Display)]
 pub enum Ez430Error {
+    /// Buffer fill error.
+    BufferFill(#[from] scroll::Error),
     /// USB error.
-    Usb(#[from] std::io::Error),
+    HidApi(#[from] hidapi::HidError),
 }
 
 impl ProbeError for Ez430Error {}
@@ -52,6 +60,7 @@ impl ProbeError for Ez430Error {}
 
 #[derive(Debug)]
 pub struct Ez430 {
+    device: Ez430UsbDevice
 }
 
 impl DebugProbe for Ez430 {
@@ -111,6 +120,7 @@ impl DebugProbe for Ez430 {
 
 impl Ez430 {
     fn init(&mut self) -> Result<(), Ez430Error> {
-        todo!()
+        let mut reply = [0; 64];
+        self.device.do_cmd(Cmd::Init, None, None, &mut reply)
     }
 }
